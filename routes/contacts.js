@@ -1,0 +1,86 @@
+const express = require("express");
+const router = express.Router();
+const auth = require("../middleware/auth");
+const Contact = require("../models/Contact");
+const { check, validationResult } = require("express-validator");
+
+// @route GET api/contacts
+// @desc get all contacts
+// @access Private
+router.get("/", auth, async (req, res, next) => {
+  try {
+    const contacts = await Contact.find({ user: req.user._id }).sort({
+      date: -1,
+    });
+    res.send({ contacts });
+  } catch (err) {
+    res.status(500).send("Server Error");
+  }
+});
+
+// @route     POST api/contacts
+// @desc      Add new contact
+// @access    Private
+router.post("/", auth, async (req, res) => {
+  const contact = new Contact({
+    ...req.body,
+    user: req.user._id,
+  });
+
+  try {
+    await contact.save();
+    res.status(201).send({ contact });
+  } catch (e) {
+    res.status(400).send({ error: e.message });
+  }
+});
+
+// @route     PUT api/contacts/:id
+// @desc      Update contact
+// @access    Private
+router.put("/:id", auth, async (req, res) => {
+  const { name, email, type, phone } = req.body;
+
+  let contactFields = {};
+  if (name) contactFields.name = name;
+  if (email) contactFields.email = email;
+  if (phone) contactFields.phone = phone;
+  if (type) contactFields.type = type;
+
+  try {
+    let contact = await Contact.findById(req.params.id);
+    if (!contact) {
+      return res.status(404).send({ msg: "Contact not found" });
+    }
+    contact = await Contact.findByIdAndUpdate(
+      req.params.id,
+      { $set: contactFields },
+      { new: true }
+    );
+
+    res.json(contact);
+  } catch (e) {
+    console.log(e.message);
+    res.status(500).send({ error: "Server Error" });
+  }
+});
+
+// @route DELETE api/contacts
+// @desc Delete contacts
+// @access Private
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const contact = await Contact.findById(req.params.id);
+    if (!contact) {
+      return res.status(404).send({ msg: "Contact not found" });
+    }
+
+    await Contact.deleteOne({ _id: req.params.id });
+
+    res.send({ msg: "Contact deleted successfully" });
+  } catch (e) {
+    res.status(500).send({ error: e.message });
+  }
+});
+
+module.exports = router;
