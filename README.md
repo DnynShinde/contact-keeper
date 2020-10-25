@@ -1,8 +1,8 @@
 # cotact-keeper
 ## Contact Keeper application for managing contacts, a full stack application.
-1. Rect
+1. RectJS
 2. Context API
-3. Node
+3. NodeJS
 4. Express JS + MongoDB
 
 > Hosted at: [Contact Keeper](https://dbs-contact-keeper.herokuapp.com/login)
